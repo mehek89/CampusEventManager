@@ -1,54 +1,35 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven3'
-        jdk 'JDK21'
-    }
-
     environment {
-        TOMCAT_CRED = 'TomcatServer'
-        APP_NAME = 'CampusEventManager'  // context path
-        TOMCAT_URL = 'http://localhost:8081'
+        // Set the Maven and JDK tools installed on Jenkins
+        MAVEN_HOME = tool name: 'Maven3', type: 'maven'
+        JAVA_HOME  = tool name: 'JDK21', type: 'jdk'
+
+        // Tomcat configuration
+        TOMCAT_URL = "http://localhost:8081"          // URL to Tomcat manager
+        TOMCAT_CRED = "TomcatServer"                  // Jenkins credentials ID for Tomcat
+        APP_NAME   = "CampusEventManager"            // Context path for your app
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git(
+                git branch: 'main',
                     url: 'https://github.com/mehek89/CampusEventManager.git',
-                    branch: 'main'
-                )
+                    credentialsId: '519449d1-d9dd-49fa-9299-a465a667a8f5'
             }
         }
 
         stage('Build') {
             steps {
-                bat 'mvn clean package'
-            }
-        }
-
-        stage('Undeploy Old App') {
-            steps {
-                script {
-                    // Try to undeploy; ignore failures if app does not exist
-                    try {
-                        deploy adapters: [
-                            tomcat9(
-                                credentialsId: "${TOMCAT_CRED}",
-                                path: "${APP_NAME}",
-                                url: "${TOMCAT_URL}"
-                            )
-                        ],
-                        action: 'undeploy'
-                    } catch (Exception e) {
-                        echo "No existing app to undeploy, continuing..."
-                    }
+                withEnv(["PATH+MAVEN=${MAVEN_HOME}/bin", "JAVA_HOME=${JAVA_HOME}"]) {
+                    bat "mvn clean package"
                 }
             }
         }
 
-        stage('Deploy New WAR') {
+        stage('Deploy') {
             steps {
                 deploy adapters: [
                     tomcat9(
@@ -64,10 +45,10 @@ pipeline {
 
     post {
         success {
-            echo 'Build and Redeploy Successful!'
+            echo "Build and deployment successful! Your app should be live at ${TOMCAT_URL}/${APP_NAME}"
         }
         failure {
-            echo 'Build or Redeploy Failed! Check Jenkins console logs.'
+            echo "Build or deployment failed! Check the console logs."
         }
     }
 }
