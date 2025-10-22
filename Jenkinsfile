@@ -2,14 +2,12 @@ pipeline {
     agent any
 
     tools {
-        // Adjust the names according to your Jenkins Tool Configuration
-        maven 'Maven-3'
-        jdk 'JDK-21'
+        maven 'Maven3'   // Use exact Maven tool name
+        jdk 'JDK21'      // Use exact JDK tool name
     }
 
     environment {
-        // Tomcat credentials ID in Jenkins
-        TOMCAT_CRED = 'TomcatServer'
+        TOMCAT_CRED = 'tomcat-cred'
     }
 
     stages {
@@ -25,7 +23,6 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Clean & package WAR
                 bat 'mvn clean package'
             }
         }
@@ -34,13 +31,13 @@ pipeline {
             steps {
                 deploy adapters: [
                     tomcat9(
-                        credentialsId: "${TOMCAT_CRED}", 
-                        path: 'CampusEventManager', 
-                        url: 'http://localhost:8081'
+                        credentialsId: "${TOMCAT_CRED}",
+                        path: 'CampusEventManager',
+                        url: 'http://localhost:8080'
                     )
                 ],
                 war: '**/target/CampusEventManager.war',
-                debug: true
+                verbose: true
             }
         }
     }
