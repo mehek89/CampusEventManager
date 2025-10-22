@@ -8,10 +8,11 @@ pipeline {
 
     environment {
         TOMCAT_CRED = 'TomcatServer'
+        APP_NAME = 'CampusEventManager'  // context path
+        TOMCAT_URL = 'http://localhost:8081'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git(
@@ -27,13 +28,33 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Undeploy Old App') {
+            steps {
+                script {
+                    // Try to undeploy; ignore failures if app does not exist
+                    try {
+                        deploy adapters: [
+                            tomcat9(
+                                credentialsId: "${TOMCAT_CRED}",
+                                path: "${APP_NAME}",
+                                url: "${TOMCAT_URL}"
+                            )
+                        ],
+                        action: 'undeploy'
+                    } catch (Exception e) {
+                        echo "No existing app to undeploy, continuing..."
+                    }
+                }
+            }
+        }
+
+        stage('Deploy New WAR') {
             steps {
                 deploy adapters: [
                     tomcat9(
                         credentialsId: "${TOMCAT_CRED}",
-                        path: 'CampusEventManager',
-                        url: 'http://localhost:8081'
+                        path: "${APP_NAME}",
+                        url: "${TOMCAT_URL}"
                     )
                 ],
                 war: '**/target/CampusEventManager.war'
@@ -43,10 +64,10 @@ pipeline {
 
     post {
         success {
-            echo 'Build and Deployment Successful!'
+            echo 'Build and Redeploy Successful!'
         }
         failure {
-            echo 'Build or Deployment Failed! Check Jenkins console logs.'
+            echo 'Build or Redeploy Failed! Check Jenkins console logs.'
         }
     }
 }
