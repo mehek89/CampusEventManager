@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'   // Use exact Maven tool name
-        jdk 'JDK21'      // Use exact JDK tool name
+        maven 'Maven3'   // exact Maven tool name in Jenkins
+        jdk 'JDK21'      // exact JDK tool name in Jenkins
     }
 
     environment {
-        TOMCAT_CRED = 'tomcat-cred'
+        TOMCAT_CRED = 'TomcatServer'
     }
 
     stages {
@@ -33,11 +33,10 @@ pipeline {
                     tomcat9(
                         credentialsId: "${TOMCAT_CRED}",
                         path: 'CampusEventManager',
-                        url: 'http://localhost:8080'
+                        url: 'http://localhost:8081'
                     )
                 ],
-                war: '**/target/CampusEventManager.war',
-                verbose: true
+                war: '**/target/CampusEventManager.war'
             }
         }
     }
@@ -47,7 +46,7 @@ pipeline {
             echo 'Build and Deployment Successful!'
         }
         failure {
-            echo 'Build or Deployment Failed! Check logs.'
+            echo 'Build or Deployment Failed! Check Jenkins console logs.'
         }
     }
 }
