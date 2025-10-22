@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'   // exact Maven tool name in Jenkins
-        jdk 'JDK21'      // exact JDK tool name in Jenkins
+        maven 'Maven3'
+        jdk 'JDK21'
     }
 
     environment {
